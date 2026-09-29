@@ -7,8 +7,8 @@ AIを使い動画からセリフを分離させたり字幕を生成できるス
 ・Python 3.9 以上<br>
 ・精度重視のwhisperモードを使う場合だけ```pip install faster-whisper```
 # 使い方（例）
-```python extract_dialogue.py movie.mp4 　　
-python extract_dialogue.py movie.mp4 --mode whisper --lang ja -f mp3 --name-with-text```
+```python extract_dialogue.py movie.mp4```
+```python extract_dialogue.py movie.mp4 --mode whisper --lang ja -f mp3 ```
 
 # オプション
 ## モード
