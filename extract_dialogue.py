@@ -1,20 +1,5 @@
 #!/usr/bin/env python3
-"""
-extract_dialogue.py — 動画からセリフ(発話区間)を自動で切り出して音声ファイルにする
 
-モード:
-  silence : ffmpeg の無音検出だけで区間を切る(軽量・追加インストール不要)
-  whisper : faster-whisper で発話区間を検出し、文字起こしも出力(精度が高い)
-
-使い方:
-  python extract_dialogue.py movie.mp4
-  python extract_dialogue.py movie.mp4 --mode whisper --lang ja -f mp3
-  python extract_dialogue.py *.mp4 -o out --noise -30 --min-silence 0.8
-
-必要なもの:
-  ffmpeg / ffprobe（PATH に通っていること）
-  whisper モードのみ: pip install faster-whisper
-"""
 from __future__ import annotations
 
 import argparse
@@ -59,7 +44,6 @@ def get_duration(path: Path) -> float:
 
 
 def extract_analysis_wav(video: Path, wav: Path) -> None:
-    """解析用に 16kHz モノラル WAV を作る。"""
     r = run(["ffmpeg", "-y", "-i", str(video), "-vn", "-ac", "1", "-ar", "16000",
              "-c:a", "pcm_s16le", str(wav)])
     if r.returncode != 0:
@@ -82,7 +66,7 @@ def detect_silence_mode(wav: Path, duration: float, noise_db: float,
             segments.append(Segment(cursor, s))
         if i < len(ends):
             cursor = ends[i]
-        else:  # 末尾まで無音
+        else:  
             cursor = duration
     if cursor < duration:
         segments.append(Segment(cursor, duration))
@@ -102,7 +86,6 @@ def detect_whisper_mode(wav: Path, model_name: str, lang: str | None) -> list[Se
     return [Segment(s.start, s.end, s.text.strip()) for s in segs]
 
 
-# ---------------------------------------------------------------- 整形
 def postprocess(segs: list[Segment], duration: float, pad: float,
                 min_dur: float, merge_gap: float) -> list[Segment]:
     segs = sorted(segs, key=lambda s: s.start)
@@ -119,7 +102,6 @@ def postprocess(segs: list[Segment], duration: float, pad: float,
     for s in out:
         s.start = max(0.0, s.start - pad)
         s.end = min(duration, s.end + pad)
-    # 余白で重なった分を調整
     for a, b in zip(out, out[1:]):
         if a.end > b.start:
             mid = (a.end + b.start) / 2
@@ -127,7 +109,6 @@ def postprocess(segs: list[Segment], duration: float, pad: float,
     return out
 
 
-# ---------------------------------------------------------------- 出力
 def safe_name(text: str, limit: int = 20) -> str:
     text = re.sub(r'[\\/:*?"<>|\s\r\n\t]+', "_", text).strip("_")
     return text[:limit]
